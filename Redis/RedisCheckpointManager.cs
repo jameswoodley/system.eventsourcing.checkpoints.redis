@@ -1,9 +1,6 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using LightestNight.System.Caching;
-using LightestNight.System.Utilities.Extensions;
 
 namespace LightestNight.System.EventSourcing.Checkpoints.Redis
 {
@@ -16,28 +13,24 @@ namespace LightestNight.System.EventSourcing.Checkpoints.Redis
             _cache = cache;
         }
 
-        public Task SetCheckpoint<TCheckpoint>(TCheckpoint checkpoint,
-            [CallerMemberName] string? checkpointName = default, CancellationToken cancellationToken = default)
-            where TCheckpoint : notnull
+        public Task SetCheckpoint(string checkpointName, long checkpoint, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            return _cache.Save(checkpointName ?? Guid.NewGuid().ToString(), checkpoint);
+            return _cache.Save(checkpointName, checkpoint);
         }
 
-        public Task<TCheckpoint> GetCheckpoint<TCheckpoint>([CallerMemberName] string? checkpointName = null,
-            CancellationToken cancellationToken = default)
+        public async Task<long?> GetCheckpoint(string checkpointName, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
-            return _cache.Get<TCheckpoint>(checkpointName.ThrowIfNull()!);
+            return await _cache.Exists<long>(checkpointName).ConfigureAwait(false)
+                ? await _cache.Get<long>(checkpointName).ConfigureAwait(false)
+                : (long?) null;
         }
 
-        public Task ClearCheckpoint([CallerMemberName] string? checkpointName = null, CancellationToken cancellationToken = new CancellationToken())
+        public Task ClearCheckpoint(string checkpointName, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            return _cache.Delete<object>(checkpointName.ThrowIfNull()!);
+            return _cache.Delete<long>(checkpointName);
         }
     }
 }

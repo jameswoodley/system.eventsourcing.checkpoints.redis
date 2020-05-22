@@ -10,6 +10,7 @@ namespace LightestNight.System.EventSourcing.Checkpoints.Redis.Tests
 {
     public class RedisCheckpointManagerTests
     {
+        private const string CheckpointName = "TestCheckpoint";
         private const long Checkpoint = 100;
         
         private readonly Mock<ICache> _cacheMock = new Mock<ICache>();
@@ -29,33 +30,31 @@ namespace LightestNight.System.EventSourcing.Checkpoints.Redis.Tests
             cancellationSource.Cancel();
             
             // Act/Assert
-            Should.Throw<TaskCanceledException>(async () => await _sut.SetCheckpoint(Checkpoint, cancellationToken: token).ConfigureAwait(false));
+            Should.Throw<TaskCanceledException>(async () =>
+                await _sut.SetCheckpoint(CheckpointName, Checkpoint, token).ConfigureAwait(false));
         }
 
         [Fact]
         public async Task ShouldSetCheckpointToGivenValue()
         {
             // Act
-            await _sut.SetCheckpoint(Checkpoint).ConfigureAwait(false);
+            await _sut.SetCheckpoint(CheckpointName, Checkpoint).ConfigureAwait(false);
 
             // Assert
             _cacheMock.Verify(
-                cache => cache.Save(nameof(ShouldSetCheckpointToGivenValue), Checkpoint, null, Array.Empty<string>()),
+                cache => cache.Save(CheckpointName, Checkpoint, null, Array.Empty<string>()),
                 Times.Once);
         }
         
         [Fact]
         public async Task ShouldSetCheckpointToGivenValueAndName()
         {
-            // Arrange
-            const string name = "Test";
-            
             // Act
-            await _sut.SetCheckpoint(Checkpoint, name).ConfigureAwait(false);
+            await _sut.SetCheckpoint(CheckpointName, Checkpoint).ConfigureAwait(false);
 
             // Assert
             _cacheMock.Verify(
-                cache => cache.Save(name, Checkpoint, null, Array.Empty<string>()),
+                cache => cache.Save(CheckpointName, Checkpoint, null, Array.Empty<string>()),
                 Times.Once);
         }
         
@@ -68,29 +67,37 @@ namespace LightestNight.System.EventSourcing.Checkpoints.Redis.Tests
             cancellationSource.Cancel();
             
             // Act/Assert
-            Should.Throw<TaskCanceledException>(async () => await _sut.GetCheckpoint<object>(cancellationToken: token).ConfigureAwait(false));
-        }
-
-        [Fact]
-        public void ShouldThrowIfNameIsNullWhenGettingCheckpoint()
-        {
-            // Act/Assert
-            Should.Throw<ArgumentNullException>(async () => await _sut.GetCheckpoint<long>(null).ConfigureAwait(false));
+            Should.Throw<TaskCanceledException>(async () =>
+                await _sut.GetCheckpoint(CheckpointName, token).ConfigureAwait(false));
         }
 
         [Fact]
         public async Task ShouldCallForCheckpoint()
         {
             // Arrange
-            _cacheMock.Setup(cache => cache.Get<long>(nameof(ShouldCallForCheckpoint)))
+            _cacheMock.Setup(cache => cache.Exists<long>(CheckpointName)).ReturnsAsync(true);
+            _cacheMock.Setup(cache => cache.Get<long>(CheckpointName))
                 .ReturnsAsync(100)
                 .Verifiable();
             
             // Act
-            await _sut.GetCheckpoint<long>().ConfigureAwait(false);
+            await _sut.GetCheckpoint(CheckpointName).ConfigureAwait(false);
             
             // Assert
             _cacheMock.Verify();
+        }
+
+        [Fact]
+        public async Task ShouldReturnNullIfCheckpointNotFound()
+        {
+            // Arrange
+            _cacheMock.Setup(cache => cache.Exists<long>(CheckpointName)).ReturnsAsync(false);
+            
+            // Act
+            var result = await _sut.GetCheckpoint(CheckpointName).ConfigureAwait(false);
+            
+            // Assert
+            result.ShouldBeNull();
         }
         
         [Fact]
@@ -102,24 +109,18 @@ namespace LightestNight.System.EventSourcing.Checkpoints.Redis.Tests
             cancellationSource.Cancel();
             
             // Act/Assert
-            Should.Throw<TaskCanceledException>(async () => await _sut.ClearCheckpoint(cancellationToken: token).ConfigureAwait(false));
-        }
-        
-        [Fact]
-        public void ShouldThrowIfNameIsNullWhenClearingCheckpoint()
-        {
-            // Act/Assert
-            Should.Throw<ArgumentNullException>(async () => await _sut.ClearCheckpoint(null).ConfigureAwait(false));
+            Should.Throw<TaskCanceledException>(async () =>
+                await _sut.ClearCheckpoint(CheckpointName, token).ConfigureAwait(false));
         }
         
         [Fact]
         public async Task ShouldCallToClearCheckpoint()
         {
             // Act
-            await _sut.ClearCheckpoint().ConfigureAwait(false);
+            await _sut.ClearCheckpoint(CheckpointName).ConfigureAwait(false);
             
             // Assert
-            _cacheMock.Verify(cache => cache.Delete<object>(nameof(ShouldCallToClearCheckpoint)), Times.Once);
+            _cacheMock.Verify(cache => cache.Delete<long>(CheckpointName), Times.Once);
         }
     }
 }

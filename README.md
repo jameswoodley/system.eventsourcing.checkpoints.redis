@@ -6,7 +6,8 @@ The elements required to manage a Stream checkpoint inside a Redis data store
 #### How To Use
 ##### Registration
 * Asp.Net Standard/Core Dependency Injection
-  * Use the provided `services.AddRedisCheckpointManagement()` method
+  * Use the provided `services.AddRedisCheckpointManagement(Action<CacheConfig>? configAction = null)` method
+    * If the configAction is supplied, an attempt to use it registering the ICache will be made, if not supplied then it is assumed ICache has already been registered
 
 * Other Containers
   * Register an instance of `IRedisCacheProvider` as a Singleton

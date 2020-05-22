@@ -7,11 +7,11 @@ using LightestNight.System.Utilities.Extensions;
 
 namespace LightestNight.System.EventSourcing.Checkpoints.Redis
 {
-    public class CheckpointManager : ICheckpointManager
+    public class RedisCheckpointManager : ICheckpointManager
     {
         private readonly ICache _cache;
 
-        public CheckpointManager(ICache cache)
+        public RedisCheckpointManager(ICache cache)
         {
             _cache = cache;
         }

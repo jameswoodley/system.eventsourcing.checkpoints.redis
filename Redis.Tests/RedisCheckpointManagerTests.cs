@@ -8,16 +8,16 @@ using Xunit;
 
 namespace LightestNight.System.EventSourcing.Checkpoints.Redis.Tests
 {
-    public class CheckpointManagerTests
+    public class RedisCheckpointManagerTests
     {
         private const long Checkpoint = 100;
         
         private readonly Mock<ICache> _cacheMock = new Mock<ICache>();
-        private readonly CheckpointManager _sut;
+        private readonly RedisCheckpointManager _sut;
         
-        public CheckpointManagerTests()
+        public RedisCheckpointManagerTests()
         {
-            _sut = new CheckpointManager(_cacheMock.Object);
+            _sut = new RedisCheckpointManager(_cacheMock.Object);
         }
 
         [Fact]

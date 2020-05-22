@@ -7,7 +7,7 @@ using LightestNight.System.Utilities.Extensions;
 
 namespace LightestNight.System.EventSourcing.Checkpoints.Redis
 {
-    public class CheckpointManager
+    public class CheckpointManager : ICheckpointManager
     {
         private readonly ICache _cache;
 
@@ -26,7 +26,7 @@ namespace LightestNight.System.EventSourcing.Checkpoints.Redis
         }
 
         public Task<TCheckpoint> GetCheckpoint<TCheckpoint>([CallerMemberName] string? checkpointName = null,
-            CancellationToken cancellationToken = new CancellationToken())
+            CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             

@@ -13,7 +13,7 @@ namespace LightestNight.System.EventSourcing.Checkpoints.Redis.Tests
         private const long Checkpoint = 100;
         
         private readonly Mock<ICache> _cacheMock = new Mock<ICache>();
-        private readonly RedisCheckpointManager _sut;
+        private readonly ICheckpointManager _sut;
         
         public RedisCheckpointManagerTests()
         {
@@ -91,6 +91,35 @@ namespace LightestNight.System.EventSourcing.Checkpoints.Redis.Tests
             
             // Assert
             _cacheMock.Verify();
+        }
+        
+        [Fact]
+        public void ShouldThrowIfCancellationRequestedWhenClearingCheckpoint()
+        {
+            // Arrange
+            using var cancellationSource = new CancellationTokenSource();
+            var token = cancellationSource.Token;
+            cancellationSource.Cancel();
+            
+            // Act/Assert
+            Should.Throw<TaskCanceledException>(async () => await _sut.ClearCheckpoint(cancellationToken: token).ConfigureAwait(false));
+        }
+        
+        [Fact]
+        public void ShouldThrowIfNameIsNullWhenClearingCheckpoint()
+        {
+            // Act/Assert
+            Should.Throw<ArgumentNullException>(async () => await _sut.ClearCheckpoint(null).ConfigureAwait(false));
+        }
+        
+        [Fact]
+        public async Task ShouldCallToClearCheckpoint()
+        {
+            // Act
+            await _sut.ClearCheckpoint().ConfigureAwait(false);
+            
+            // Assert
+            _cacheMock.Verify(cache => cache.Delete<object>(nameof(ShouldCallToClearCheckpoint)), Times.Once);
         }
     }
 }

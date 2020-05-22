@@ -32,5 +32,12 @@ namespace LightestNight.System.EventSourcing.Checkpoints.Redis
             
             return _cache.Get<TCheckpoint>(checkpointName.ThrowIfNull()!);
         }
+
+        public Task ClearCheckpoint([CallerMemberName] string? checkpointName = null, CancellationToken cancellationToken = new CancellationToken())
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            return _cache.Delete<object>(checkpointName.ThrowIfNull()!);
+        }
     }
 }

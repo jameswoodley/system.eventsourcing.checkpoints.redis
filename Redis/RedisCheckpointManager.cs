@@ -22,9 +22,12 @@ namespace LightestNight.System.EventSourcing.Checkpoints.Redis
         public async Task<long?> GetCheckpoint(string checkpointName, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return await _cache.Exists<long>(checkpointName).ConfigureAwait(false)
-                ? await _cache.Get<long>(checkpointName).ConfigureAwait(false)
-                : (long?) null;
+
+            if (!await _cache.Exists<long>(checkpointName).ConfigureAwait(false)) 
+                return null;
+            
+            var checkpoint = await _cache.Get<long>(checkpointName).ConfigureAwait(false);
+            return checkpoint.Value;
         }
 
         public Task ClearCheckpoint(string checkpointName, CancellationToken cancellationToken = default)

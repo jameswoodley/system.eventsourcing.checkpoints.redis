@@ -77,7 +77,7 @@ namespace LightestNight.System.EventSourcing.Checkpoints.Redis.Tests
             // Arrange
             _cacheMock.Setup(cache => cache.Exists<long>(CheckpointName)).ReturnsAsync(true);
             _cacheMock.Setup(cache => cache.Get<long>(CheckpointName))
-                .ReturnsAsync(100)
+                .ReturnsAsync(new CacheItem<long>{Value = 100})
                 .Verifiable();
             
             // Act
